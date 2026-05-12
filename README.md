@@ -1,32 +1,32 @@
 # 💰 Spendify - Personal Finance Tracker
 
-**A modern React web application to help users manage their personal income and expenses effectively.**
+**A modern React web application for tracking personal income and expenses.**
 
 ## ✨ Project Description
-Spendify is a clean and intuitive React-based web application designed to help users track their income and expenses, categorize transactions, and monitor their financial habits. The app features a beautiful dark-themed UI, full CRUD functionality, and real-time financial summaries.
+Spendify is a clean and intuitive React-based web application designed to help users manage their personal finances effectively. Users can track income and expenses, categorize transactions, view financial summaries, and monitor their spending habits through a beautiful dark-themed interface.
 
 ## 🎯 Features
-- ✅ Add, Edit, and Delete transactions  
-- ✅ Real-time dashboard with Balance, Income & Expenses summary  
-- ✅ Categorization of transactions  
-- ✅ Modern responsive design (Mobile + Desktop)  
-- ✅ Dark theme with Tailwind CSS  
-- ✅ Client-side routing  
+- ✅ Add, Edit, and Delete transactions (Full CRUD)
+- ✅ Real-time dashboard with Total Balance, Income & Expenses
+- ✅ Transaction categorization
+- ✅ Modern responsive design (Mobile + Desktop friendly)
+- ✅ Dark theme with Tailwind CSS
+- ✅ Client-side routing with React Router
 
 ## 🛠️ Tech Stack
-- **Frontend**: React.js + Vite  
-- **Styling**: Tailwind CSS  
-- **Routing**: React Router DOM  
-- **Backend**: json-server  
-- **State Management**: React Hooks (`useState`, `useEffect`)
+- **Frontend**: React.js + Vite
+- **Styling**: Tailwind CSS
+- **Routing**: React Router DOM
+- **Backend**: json-server (REST API)
+- **State Management**: React Hooks
 
 ## 👥 Team Members
-| Role              | Name                  |
-|-------------------|-----------------------|
-| Group Leader      | Frank Kinyua          |
-| UI/UX & Styling   | Shalone Gichana       |
-| Dashboard         | Ian Gabriel           |
-| Forms & CRUD      | Abdifatah Bashir      |
+| Role                  | Name                |
+|-----------------------|---------------------|
+| Group Leader          | Frank Kinyua        |
+| UI/UX & Styling       | Shalone Gichana     |
+| Dashboard             | Ian Gabriel         |
+| Forms & CRUD          | Abdifatah Bashir    |
 
 ## 🚀 Quick Start
 
@@ -38,42 +38,31 @@ Spendify is a clean and intuitive React-based web application designed to help u
    cd spendify
 
 Install dependencies
-bash
+
 npm install
 
 Start JSON Server (Backend)
-bash
+
 npx json-server --watch db.json --port 3000
 
 Start the React App
-bash
+
 npm run dev
 
- Links & Screenshots
- Figma Design: [Waiting for Shalone Gichana]
-Live Demo: [To be added after Vercel deployment]
-Trello Board: View Trello_Board.png (./Trello_Board.png)
-Project Board Screenshot: Trello_Board.png (./Trello_Board.png)
+ ## 📸 Links
+- **Figma Design**: [Waiting for Shalone Gichana]
+- **Live Demo**: https://spendify-silk.vercel.app
+- **Trello Board**: [View Trello_Board.png](./Trello_Board.png)
 
- Project Structure
- 
- bash
-
+ Project Structure 
 src/
-├── components/
-│   ├── Navbar.jsx
-│   ├── TransactionCard.jsx
-│   └── TransactionForm.jsx
-├── pages/
-│   ├── Home.jsx
-│   ├── AddTransaction.jsx
-│   └── EditTransaction.jsx
-├── services/
-│   └── api.js
-└── utils/
-    └── helpers.js
+├── components/      # Navbar, TransactionCard, TransactionForm
+├── pages/           # Home, AddTransaction, EditTransaction
+├── services/        # api.js
+└── utils/           # helpers.js
 
 Submission Checklist
+
 Figma Design Link
 Trello Board Screenshot (Trello_Board.png)
 GitHub Repository URL
