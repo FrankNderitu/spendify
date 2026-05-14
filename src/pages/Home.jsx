@@ -1,164 +1,175 @@
-// Home.jsx
-
 import { useEffect, useMemo, useState } from "react";
+
 import TransactionCard from "../components/TransactionCard";
-import { getTransactions } from "../utils/api";
+
+import {
+  getTransactions,
+  deleteTransaction,
+} from "../services/api";
+
+import { formatCurrency } from "../utils/helpers";
 
 export default function Home() {
-  // -----------------------------
-  // STATE MANAGEMENT
-  // -----------------------------
-
-  // Stores all fetched transactions
   const [transactions, setTransactions] = useState([]);
-
-  // Tracks loading state while fetching data
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [filter, setFilter] = useState("all");
 
-  // Stores possible API or fetch errors
-  const [error, setError] = useState(null);
-
-  // -----------------------------
   // FETCH TRANSACTIONS
-  // -----------------------------
-
   useEffect(() => {
-    // Async function to fetch data
-    const fetchTransactions = async () => {
-      try {
-        setLoading(true);
-
-        // Fetch data from API utility
-        const data = await getTransactions();
-
-        // Save transactions into state
-        setTransactions(data);
-      } catch (err) {
-        console.error("Error fetching transactions:", err);
-
-        // Save error message
-        setError("Failed to load transactions.");
-      } finally {
-        // Stop loading regardless of success/failure
-        setLoading(false);
-      }
-    };
-
-    // Call the async function
-    fetchTransactions();
+    fetchData();
   }, []);
 
-  // -----------------------------
-  // CALCULATE SUMMARY DATA
-  // -----------------------------
+  async function fetchData() {
+    try {
+      setLoading(true);
 
-  const summary = useMemo(() => {
-    let income = 0;
-    let expenses = 0;
+      const data = await getTransactions();
 
-    transactions.forEach((transaction) => {
-      // Assuming each transaction has:
-      // {
-      //   amount: number,
-      //   type: "income" | "expense"
-      // }
+      setTransactions(data);
+    } catch (err) {
+      setError("Failed to load transactions.");
+    } finally {
+      setLoading(false);
+    }
+  }
 
-      if (transaction.type === "income") {
-        income += transaction.amount;
-      } else {
-        expenses += transaction.amount;
-      }
-    });
+  // DELETE TRANSACTION
+  async function handleDelete(id) {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this transaction?"
+    );
 
-    return {
-      totalIncome: income,
-      totalExpenses: expenses,
-      totalBalance: income - expenses,
-    };
-  }, [transactions]);
+    if (!confirmed) return;
 
-  // -----------------------------
-  // LOADING STATE
-  // -----------------------------
+    try {
+      await deleteTransaction(id);
 
+      setTransactions((prev) =>
+        prev.filter((item) => item.id !== id)
+      );
+    } catch (err) {
+      alert("Failed to delete transaction.");
+    }
+  }
+
+  // FILTERED DATA
+  const filteredTransactions = useMemo(() => {
+    if (filter === "all") return transactions;
+
+    return transactions.filter(
+      (item) => item.type === filter
+    );
+  }, [transactions, filter]);
+
+  // TOTALS
+  const totalIncome = transactions
+    .filter((item) => item.type === "income")
+    .reduce((sum, item) => sum + item.amount, 0);
+
+  const totalExpenses = transactions
+    .filter((item) => item.type === "expense")
+    .reduce((sum, item) => sum + item.amount, 0);
+
+  const totalBalance = totalIncome - totalExpenses;
+
+  // LOADING
   if (loading) {
     return (
-      <div className="home-page">
-        <h2>Loading dashboard...</h2>
+      <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
+        Loading transactions...
       </div>
     );
   }
 
-  // -----------------------------
-  // ERROR STATE
-  // -----------------------------
-
+  // ERROR
   if (error) {
     return (
-      <div className="home-page">
-        <h2>{error}</h2>
+      <div className="min-h-screen bg-gray-900 text-red-400 flex items-center justify-center">
+        {error}
       </div>
     );
   }
 
-  // -----------------------------
-  // MAIN UI
-  // -----------------------------
-
   return (
-    <div className="home-page">
+    <div className="min-h-screen bg-gray-900 text-white p-6">
 
-      {/* =========================
-          SUMMARY SECTION
-      ========================== */}
+      {/* PAGE TITLE */}
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold">
+          Spendify Dashboard
+        </h1>
 
-      <div className="summary-cards">
+        <p className="text-gray-400 mt-2">
+          Track your income and expenses
+        </p>
+      </div>
 
-        {/* TOTAL BALANCE */}
-        <div className="summary-card balance-card">
-          <h3>Total Balance</h3>
-          <p>KES {summary.totalBalance.toLocaleString()}</p>
+      {/* SUMMARY CARDS */}
+      <div className="grid md:grid-cols-3 gap-6 mb-8">
+
+        <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700">
+          <p className="text-gray-400">Total Balance</p>
+
+          <h2 className="text-3xl font-bold mt-2 text-blue-400">
+            {formatCurrency(totalBalance)}
+          </h2>
         </div>
 
-        {/* TOTAL INCOME */}
-        <div className="summary-card income-card">
-          <h3>Total Income</h3>
-          <p>KES {summary.totalIncome.toLocaleString()}</p>
+        <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700">
+          <p className="text-gray-400">Income</p>
+
+          <h2 className="text-3xl font-bold mt-2 text-green-400">
+            {formatCurrency(totalIncome)}
+          </h2>
         </div>
 
-        {/* TOTAL EXPENSES */}
-        <div className="summary-card expense-card">
-          <h3>Total Expenses</h3>
-          <p>KES {summary.totalExpenses.toLocaleString()}</p>
+        <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700">
+          <p className="text-gray-400">Expenses</p>
+
+          <h2 className="text-3xl font-bold mt-2 text-red-400">
+            {formatCurrency(totalExpenses)}
+          </h2>
         </div>
 
       </div>
 
-      {/* =========================
-          TRANSACTION LIST
-      ========================== */}
+      {/* FILTER BUTTONS */}
+      <div className="flex gap-4 mb-8">
 
-      <div className="transactions-section">
+        {["all", "income", "expense"].map((type) => (
+          <button
+            key={type}
+            onClick={() => setFilter(type)}
+            className={`px-5 py-2 rounded-xl capitalize transition ${
+              filter === type
+                ? "bg-blue-500 text-white"
+                : "bg-gray-800 text-gray-300"
+            }`}
+          >
+            {type}
+          </button>
+        ))}
 
-        <div className="section-header">
-          <h2>Recent Transactions</h2>
-        </div>
+      </div>
 
-        {transactions.length === 0 ? (
-          <p>No transactions found.</p>
-        ) : (
-          <div className="transactions-list">
+      {/* TRANSACTIONS */}
+      <div className="space-y-4">
 
-            {/* Render TransactionCard for each transaction */}
-            {transactions.map((transaction) => (
-              <TransactionCard
-                key={transaction.id}
-                transaction={transaction}
-              />
-            ))}
-
+        {filteredTransactions.length === 0 ? (
+          <div className="bg-gray-800 rounded-2xl p-6 text-gray-400">
+            No transactions found.
           </div>
+        ) : (
+          filteredTransactions.map((transaction) => (
+            <TransactionCard
+              key={transaction.id}
+              transaction={transaction}
+              onDelete={handleDelete}
+            />
+          ))
         )}
+
       </div>
     </div>
   );
