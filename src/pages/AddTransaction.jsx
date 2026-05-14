@@ -1,49 +1,7 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const AddTransaction = () => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    type: 'expense',
-    amount: '',
-    category: '',
-    description: '',
-    date: new Date().toISOString().split('T')[0]
-  });
-  const [loading, setLoading] = useState(false);
-
-  const categories = {
-    income: ['Salary', 'Freelance', 'Investment', 'Gift', 'Others'],
-    expense: ['Food', 'Transport', 'Rent', 'Utilities', 'Shopping', 'Entertainment', 'Health', 'Others']
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-      const response = await fetch('http://localhost:3001/transactions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          amount: Number(formData.amount)
-        })
-      });
-
-      if (response.ok) {
-        alert('Transaction added successfully!');
-        navigate('/');
-      } else {
-        alert('Failed to add transaction');
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      alert('Error connecting to server');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <div className="max-w-lg mx-auto">
@@ -136,9 +94,22 @@ const AddTransaction = () => {
           disabled={loading}
           className="w-full bg-emerald-500 hover:bg-emerald-600 py-4 rounded-2xl font-semibold text-lg transition disabled:opacity-70"
         >
-          {loading ? 'Adding...' : 'Add Transaction'}
+          ← Back to Dashboard
         </button>
-      </form>
+      </div>
+
+      <div className="bg-gray-900 p-8 rounded-2xl">
+        <p className="text-gray-400 text-center py-12 text-lg">
+          This is where Member 4 should build the full Transaction Form.<br />
+          (Income/Expense toggle, Amount, Category, Description, Date, etc.)
+        </p>
+        
+        <div className="text-center mt-6">
+          <p className="text-sm text-gray-500">
+            Member 4's responsibility: Full form with validation + submit logic
+          </p>
+        </div>
+      </div>
     </div>
   );
 };
