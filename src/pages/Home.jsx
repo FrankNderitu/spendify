@@ -1,142 +1,109 @@
 import { useState, useEffect } from 'react';
-import { getTransactions, deleteTransaction } from '../services/api';
-import TransactionCard from '../components/TransactionCard';
-import { formatCurrency } from '../utils/helpers';
+import { Link } from 'react-router-dom';
 
 const Home = () => {
   const [transactions, setTransactions] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
-  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    fetchTransactions();
+    fetch('http://localhost:3001/transactions')
+      .then(res => res.json())
+      .then(data => {
+        setTransactions(data);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error("Error fetching data:", err);
+        setLoading(false);
+      });
   }, []);
 
-  const fetchTransactions = async () => {
-    try {
-      const data = await getTransactions();
-      setTransactions(data);
-    } catch (error) {
-      console.error("Failed to fetch transactions", error);
-    }
-  };
+  const filteredTransactions = transactions.filter(tx => {
+    if (filter === 'income') return tx.type === 'income';
+    if (filter === 'expense') return tx.type === 'expense';
+    return true;
+  });
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Delete this transaction?")) {
-      try {
-        await deleteTransaction(id);
-        fetchTransactions();
-      } catch (error) {
-        alert("Failed to delete transaction");
-      }
-    }
-  };
-
-  // Calculate totals
   const totalIncome = transactions
     .filter(t => t.type === 'income')
     .reduce((sum, t) => sum + Number(t.amount), 0);
 
-  const totalExpenses = transactions
+  const totalExpense = transactions
     .filter(t => t.type === 'expense')
     .reduce((sum, t) => sum + Number(t.amount), 0);
 
-  const balance = totalIncome - totalExpenses;
-
-  // Filter + Search
-  const filteredTransactions = transactions
-    .filter(t => {
-      const matchesFilter = 
-        filter === 'all' || 
-        (filter === 'income' && t.type === 'income') || 
-        (filter === 'expense' && t.type === 'expense');
-      
-      const matchesSearch = 
-        t.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (t.category && t.category.toLowerCase().includes(searchTerm.toLowerCase()));
-      
-      return matchesFilter && matchesSearch;
-    })
-    .sort((a, b) => new Date(b.date) - new Date(a.date)); // newest first
+  const balance = totalIncome - totalExpense;
 
   return (
-    <div className="space-y-8">
-      <div className="flex justify-between items-center">
+    <div>
+      <div className="flex justify-between items-center mb-8">
         <h1 className="text-4xl font-bold">Dashboard</h1>
-        <a 
-          href="/add" 
-          className="bg-emerald-600 hover:bg-emerald-500 px-6 py-3 rounded-xl font-medium transition-colors"
+        <Link
+          to="/add"
+          className="bg-emerald-500 hover:bg-emerald-600 px-6 py-3 rounded-2xl font-semibold flex items-center gap-2 transition"
         >
           + New Transaction
-        </a>
+        </Link>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-gray-900 p-6 rounded-2xl">
-          <p className="text-gray-400">Total Balance</p>
-          <p className={`text-4xl font-bold mt-3 ${balance >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-            {formatCurrency(balance)}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+        <div className="bg-gray-900 rounded-3xl p-8 border border-gray-800">
+          <p className="text-gray-400 text-sm">Total Balance</p>
+          <p className={`text-4xl font-bold mt-2 ${balance >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+            ${balance.toLocaleString()}
           </p>
         </div>
-        <div className="bg-gray-900 p-6 rounded-2xl">
-          <p className="text-gray-400">Total Income</p>
-          <p className="text-4xl font-bold text-emerald-400 mt-3">{formatCurrency(totalIncome)}</p>
+        <div className="bg-gray-900 rounded-3xl p-8 border border-gray-800">
+          <p className="text-gray-400 text-sm">Total Income</p>
+          <p className="text-4xl font-bold mt-2 text-emerald-400">
+            ${totalIncome.toLocaleString()}
+          </p>
         </div>
-        <div className="bg-gray-900 p-6 rounded-2xl">
-          <p className="text-gray-400">Total Expenses</p>
-          <p className="text-4xl font-bold text-red-400 mt-3">{formatCurrency(totalExpenses)}</p>
+        <div className="bg-gray-900 rounded-3xl p-8 border border-gray-800">
+          <p className="text-gray-400 text-sm">Total Expenses</p>
+          <p className="text-4xl font-bold mt-2 text-red-400">
+            ${totalExpense.toLocaleString()}
+          </p>
         </div>
       </div>
 
-      {/* Search and Filters */}
-      <div className="flex flex-col md:flex-row gap-4">
-        <input
-          type="text"
-          placeholder="Search transactions..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="flex-1 bg-gray-900 border border-gray-700 rounded-xl px-5 py-3 focus:outline-none focus:border-emerald-500"
-        />
-        
-        <div className="flex gap-3">
-          <button 
-            onClick={() => setFilter('all')} 
-            className={`px-6 py-3 rounded-xl ${filter === 'all' ? 'bg-white text-black' : 'bg-gray-800'}`}
+      {/* Filters */}
+      <div className="flex gap-3 mb-6">
+        {['all', 'income', 'expense'].map(f => (
+          <button
+            key={f}
+            onClick={() => setFilter(f)}
+            className={`px-6 py-2.5 rounded-2xl capitalize font-medium transition ${
+              filter === f ? 'bg-emerald-500 text-white' : 'bg-gray-800 hover:bg-gray-700 text-gray-400'
+            }`}
           >
-            All
+            {f}
           </button>
-          <button 
-            onClick={() => setFilter('income')} 
-            className={`px-6 py-3 rounded-xl ${filter === 'income' ? 'bg-emerald-600' : 'bg-gray-800'}`}
-          >
-            Income
-          </button>
-          <button 
-            onClick={() => setFilter('expense')} 
-            className={`px-6 py-3 rounded-xl ${filter === 'expense' ? 'bg-red-600' : 'bg-gray-800'}`}
-          >
-            Expense
-          </button>
-        </div>
+        ))}
       </div>
 
       {/* Transactions List */}
-      <div className="bg-gray-900 p-6 rounded-2xl">
-        <h2 className="text-xl font-semibold mb-6">
-          Recent Transactions ({filteredTransactions.length})
-        </h2>
+      <div className="bg-gray-900 rounded-3xl p-8">
+        <h2 className="text-xl font-semibold mb-6">Recent Transactions</h2>
         
-        {filteredTransactions.length === 0 ? (
-          <p className="text-gray-400 text-center py-16">No matching transactions found.</p>
+        {loading ? (
+          <p>Loading...</p>
+        ) : filteredTransactions.length === 0 ? (
+          <p className="text-gray-400">No transactions yet.</p>
         ) : (
           <div className="space-y-4">
-            {filteredTransactions.map(transaction => (
-              <TransactionCard 
-                key={transaction.id} 
-                transaction={transaction} 
-                onDelete={handleDelete} 
-              />
+            {filteredTransactions.slice(0, 8).map(tx => (
+              <div key={tx.id} className="flex justify-between items-center bg-gray-800 p-5 rounded-2xl">
+                <div>
+                  <p className="font-medium">{tx.description}</p>
+                  <p className="text-sm text-gray-500">{tx.category} • {tx.date}</p>
+                </div>
+                <p className={`font-semibold text-lg ${tx.type === 'income' ? 'text-emerald-400' : 'text-red-400'}`}>
+                  {tx.type === 'income' ? '+' : '-'}${Number(tx.amount).toLocaleString()}
+                </p>
+              </div>
             ))}
           </div>
         )}
