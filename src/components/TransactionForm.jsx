@@ -32,7 +32,7 @@ const TransactionForm = ({ onSubmit, initialData = {} }) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Type Toggle */}
+      
       <div>
         <label className="block text-sm text-gray-400 mb-2">Transaction Type</label>
         <div className="flex gap-3">

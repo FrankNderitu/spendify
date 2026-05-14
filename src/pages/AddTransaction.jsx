@@ -47,10 +47,9 @@ const AddTransaction = () => {
 
   return (
     <div className="max-w-lg mx-auto">
-   <h1 className="text-3xl font-bold">Add New Transaction </h1>
+   <h1 className="text-3xl font-bold">Add New Transaction-tested </h1>
 
   
-
 
       <form onSubmit={handleSubmit} className="space-y-6 bg-gray-900 p-8 rounded-3xl">
         {/* Type Toggle */}
