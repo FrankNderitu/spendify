@@ -50,10 +50,9 @@ Start the React App
 npm run dev
 
  ## 📸 Links
-- **Figma Design**: [Waiting for Shalone Gichana]
-- **Live Demo**: https://spendify-silk.vercel.app
+- **Figma Design**: [https://www.figma.com/design/2mYImO8GyQkK5UEkTmoSyL/Spendify---UI-Design?node-id=0-1&t=utaMWrL0tOGoOgQE-1](https://www.figma.com/design/2mYImO8GyQkK5UEkTmoSyL/Spendify---UI-Design?node-id=0-1&t=utaMWrL0tOGoOgQE-1)
+- **Live Demo**: [https://spendify-silk.vercel.app](https://spendify-silk.vercel.app)
 - **Trello Board**: [View Trello_Board.png](./Trello_Board.png)
-
  Project Structure 
 src/
 ├── components/      # Navbar, TransactionCard, TransactionForm
