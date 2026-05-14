@@ -1,165 +1,148 @@
-// Home.jsx
+import { useState, useEffect } from 'react';
+import { getTransactions, deleteTransaction } from '../services/api';
+import TransactionCard from '../components/TransactionCard';
+import { formatCurrency } from '../utils/helpers';
 
-import { useEffect, useMemo, useState } from "react";
-import TransactionCard from "../components/TransactionCard";
-import { getTransactions } from "../utils/api";
-
-export default function Home() {
-  // -----------------------------
-  // STATE MANAGEMENT
-  // -----------------------------
-
-  // Stores all fetched transactions
+const Home = () => {
   const [transactions, setTransactions] = useState([]);
-
-  // Tracks loading state while fetching data
-  const [loading, setLoading] = useState(true);
-
-  // Stores possible API or fetch errors
-  const [error, setError] = useState(null);
-
-  // -----------------------------
-  // FETCH TRANSACTIONS
-  // -----------------------------
+  const [filter, setFilter] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    // Async function to fetch data
-    const fetchTransactions = async () => {
-      try {
-        setLoading(true);
-
-        // Fetch data from API utility
-        const data = await getTransactions();
-
-        // Save transactions into state
-        setTransactions(data);
-      } catch (err) {
-        console.error("Error fetching transactions:", err);
-
-        // Save error message
-        setError("Failed to load transactions.");
-      } finally {
-        // Stop loading regardless of success/failure
-        setLoading(false);
-      }
-    };
-
-    // Call the async function
     fetchTransactions();
   }, []);
 
-  // -----------------------------
-  // CALCULATE SUMMARY DATA
-  // -----------------------------
+  const fetchTransactions = async () => {
+    try {
+      const data = await getTransactions();
+      setTransactions(data);
+    } catch (error) {
+      console.error("Failed to fetch transactions", error);
+    }
+  };
 
-  const summary = useMemo(() => {
-    let income = 0;
-    let expenses = 0;
-
-    transactions.forEach((transaction) => {
-      // Assuming each transaction has:
-      // {
-      //   amount: number,
-      //   type: "income" | "expense"
-      // }
-
-      if (transaction.type === "income") {
-        income += transaction.amount;
-      } else {
-        expenses += transaction.amount;
+  const handleDelete = async (id) => {
+    if (window.confirm("Delete this transaction?")) {
+      try {
+        await deleteTransaction(id);
+        fetchTransactions();
+      } catch (error) {
+        alert("Failed to delete transaction");
       }
-    });
+    }
+  };
 
-    return {
-      totalIncome: income,
-      totalExpenses: expenses,
-      totalBalance: income - expenses,
-    };
-  }, [transactions]);
+  // Calculate totals
+  const totalIncome = transactions
+    .filter(t => t.type === 'income')
+    .reduce((sum, t) => sum + Number(t.amount), 0);
 
-  // -----------------------------
-  // LOADING STATE
-  // -----------------------------
+  const totalExpenses = transactions
+    .filter(t => t.type === 'expense')
+    .reduce((sum, t) => sum + Number(t.amount), 0);
 
-  if (loading) {
-    return (
-      <div className="home-page">
-        <h2>Loading dashboard...</h2>
-      </div>
-    );
-  }
+  const balance = totalIncome - totalExpenses;
 
-  // -----------------------------
-  // ERROR STATE
-  // -----------------------------
-
-  if (error) {
-    return (
-      <div className="home-page">
-        <h2>{error}</h2>
-      </div>
-    );
-  }
-
-  // -----------------------------
-  // MAIN UI
-  // -----------------------------
+  // Filter + Search
+  const filteredTransactions = transactions
+    .filter(t => {
+      const matchesFilter = 
+        filter === 'all' || 
+        (filter === 'income' && t.type === 'income') || 
+        (filter === 'expense' && t.type === 'expense');
+      
+      const matchesSearch = 
+        t.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (t.category && t.category.toLowerCase().includes(searchTerm.toLowerCase()));
+      
+      return matchesFilter && matchesSearch;
+    })
+    .sort((a, b) => new Date(b.date) - new Date(a.date)); // newest first
 
   return (
-    <div className="home-page">
-
-      {/* =========================
-          SUMMARY SECTION
-      ========================== */}
-
-      <div className="summary-cards">
-
-        {/* TOTAL BALANCE */}
-        <div className="summary-card balance-card">
-          <h3>Total Balance</h3>
-          <p>KES {summary.totalBalance.toLocaleString()}</p>
-        </div>
-
-        {/* TOTAL INCOME */}
-        <div className="summary-card income-card">
-          <h3>Total Income</h3>
-          <p>KES {summary.totalIncome.toLocaleString()}</p>
-        </div>
-
-        {/* TOTAL EXPENSES */}
-        <div className="summary-card expense-card">
-          <h3>Total Expenses</h3>
-          <p>KES {summary.totalExpenses.toLocaleString()}</p>
-        </div>
-
+    <div className="space-y-8">
+      <div className="flex justify-between items-center">
+        <h1 className="text-4xl font-bold">Dashboard</h1>
+        <a 
+          href="/add" 
+          className="bg-emerald-600 hover:bg-emerald-500 px-6 py-3 rounded-xl font-medium transition-colors"
+        >
+          + New Transaction
+        </a>
       </div>
 
-      {/* =========================
-          TRANSACTION LIST
-      ========================== */}
-
-      <div className="transactions-section">
-
-        <div className="section-header">
-          <h2>Recent Transactions</h2>
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-gray-900 p-6 rounded-2xl">
+          <p className="text-gray-400">Total Balance</p>
+          <p className={`text-4xl font-bold mt-3 ${balance >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+            {formatCurrency(balance)}
+          </p>
         </div>
+        <div className="bg-gray-900 p-6 rounded-2xl">
+          <p className="text-gray-400">Total Income</p>
+          <p className="text-4xl font-bold text-emerald-400 mt-3">{formatCurrency(totalIncome)}</p>
+        </div>
+        <div className="bg-gray-900 p-6 rounded-2xl">
+          <p className="text-gray-400">Total Expenses</p>
+          <p className="text-4xl font-bold text-red-400 mt-3">{formatCurrency(totalExpenses)}</p>
+        </div>
+      </div>
 
-        {transactions.length === 0 ? (
-          <p>No transactions found.</p>
+      {/* Search and Filters */}
+      <div className="flex flex-col md:flex-row gap-4">
+        <input
+          type="text"
+          placeholder="Search transactions..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="flex-1 bg-gray-900 border border-gray-700 rounded-xl px-5 py-3 focus:outline-none focus:border-emerald-500"
+        />
+        
+        <div className="flex gap-3">
+          <button 
+            onClick={() => setFilter('all')} 
+            className={`px-6 py-3 rounded-xl ${filter === 'all' ? 'bg-white text-black' : 'bg-gray-800'}`}
+          >
+            All
+          </button>
+          <button 
+            onClick={() => setFilter('income')} 
+            className={`px-6 py-3 rounded-xl ${filter === 'income' ? 'bg-emerald-600' : 'bg-gray-800'}`}
+          >
+            Income
+          </button>
+          <button 
+            onClick={() => setFilter('expense')} 
+            className={`px-6 py-3 rounded-xl ${filter === 'expense' ? 'bg-red-600' : 'bg-gray-800'}`}
+          >
+            Expense
+          </button>
+        </div>
+      </div>
+
+      {/* Transactions List */}
+      <div className="bg-gray-900 p-6 rounded-2xl">
+        <h2 className="text-xl font-semibold mb-6">
+          Recent Transactions ({filteredTransactions.length})
+        </h2>
+        
+        {filteredTransactions.length === 0 ? (
+          <p className="text-gray-400 text-center py-16">No matching transactions found.</p>
         ) : (
-          <div className="transactions-list">
-
-            {/* Render TransactionCard for each transaction */}
-            {transactions.map((transaction) => (
-              <TransactionCard
-                key={transaction.id}
-                transaction={transaction}
+          <div className="space-y-4">
+            {filteredTransactions.map(transaction => (
+              <TransactionCard 
+                key={transaction.id} 
+                transaction={transaction} 
+                onDelete={handleDelete} 
               />
             ))}
-
           </div>
         )}
       </div>
     </div>
   );
-}
+};
+
+export default Home;
