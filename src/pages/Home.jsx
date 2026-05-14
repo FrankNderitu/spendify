@@ -1,98 +1,165 @@
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { formatCurrency } from '../utils/helpers';   // we'll create this next
+// Home.jsx
 
-const Home = () => {
+import { useEffect, useMemo, useState } from "react";
+import TransactionCard from "../components/TransactionCard";
+import { getTransactions } from "../utils/api";
+
+export default function Home() {
+  // -----------------------------
+  // STATE MANAGEMENT
+  // -----------------------------
+
+  // Stores all fetched transactions
   const [transactions, setTransactions] = useState([]);
+
+  // Tracks loading state while fetching data
   const [loading, setLoading] = useState(true);
 
-  // Fetch transactions
+  // Stores possible API or fetch errors
+  const [error, setError] = useState(null);
+
+  // -----------------------------
+  // FETCH TRANSACTIONS
+  // -----------------------------
+
   useEffect(() => {
-    fetch('http://localhost:3001/transactions')
-      .then(res => res.json())
-      .then(data => {
+    // Async function to fetch data
+    const fetchTransactions = async () => {
+      try {
+        setLoading(true);
+
+        // Fetch data from API utility
+        const data = await getTransactions();
+
+        // Save transactions into state
         setTransactions(data);
+      } catch (err) {
+        console.error("Error fetching transactions:", err);
+
+        // Save error message
+        setError("Failed to load transactions.");
+      } finally {
+        // Stop loading regardless of success/failure
         setLoading(false);
-      })
-      .catch(err => {
-        console.error("Error fetching data:", err);
-        setLoading(false);
-      });
+      }
+    };
+
+    // Call the async function
+    fetchTransactions();
   }, []);
 
-  // Calculate totals
-  const totalIncome = transactions
-    .filter(t => t.type === 'income')
-    .reduce((sum, t) => sum + Number(t.amount), 0);
+  // -----------------------------
+  // CALCULATE SUMMARY DATA
+  // -----------------------------
 
-  const totalExpense = transactions
-    .filter(t => t.type === 'expense')
-    .reduce((sum, t) => sum + Number(t.amount), 0);
+  const summary = useMemo(() => {
+    let income = 0;
+    let expenses = 0;
 
-  const balance = totalIncome - totalExpense;
+    transactions.forEach((transaction) => {
+      // Assuming each transaction has:
+      // {
+      //   amount: number,
+      //   type: "income" | "expense"
+      // }
+
+      if (transaction.type === "income") {
+        income += transaction.amount;
+      } else {
+        expenses += transaction.amount;
+      }
+    });
+
+    return {
+      totalIncome: income,
+      totalExpenses: expenses,
+      totalBalance: income - expenses,
+    };
+  }, [transactions]);
+
+  // -----------------------------
+  // LOADING STATE
+  // -----------------------------
+
+  if (loading) {
+    return (
+      <div className="home-page">
+        <h2>Loading dashboard...</h2>
+      </div>
+    );
+  }
+
+  // -----------------------------
+  // ERROR STATE
+  // -----------------------------
+
+  if (error) {
+    return (
+      <div className="home-page">
+        <h2>{error}</h2>
+      </div>
+    );
+  }
+
+  // -----------------------------
+  // MAIN UI
+  // -----------------------------
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-4xl font-bold">Dashboard</h1>
-        <Link
-          to="/add"
-          className="bg-emerald-500 hover:bg-emerald-600 px-6 py-3 rounded-2xl font-semibold flex items-center gap-2 transition"
-        >
-          + New Transaction
-        </Link>
+    <div className="home-page">
+
+      {/* =========================
+          SUMMARY SECTION
+      ========================== */}
+
+      <div className="summary-cards">
+
+        {/* TOTAL BALANCE */}
+        <div className="summary-card balance-card">
+          <h3>Total Balance</h3>
+          <p>KES {summary.totalBalance.toLocaleString()}</p>
+        </div>
+
+        {/* TOTAL INCOME */}
+        <div className="summary-card income-card">
+          <h3>Total Income</h3>
+          <p>KES {summary.totalIncome.toLocaleString()}</p>
+        </div>
+
+        {/* TOTAL EXPENSES */}
+        <div className="summary-card expense-card">
+          <h3>Total Expenses</h3>
+          <p>KES {summary.totalExpenses.toLocaleString()}</p>
+        </div>
+
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-        <div className="bg-gray-900 rounded-3xl p-8 border border-gray-800">
-          <p className="text-gray-400 text-sm">Total Balance</p>
-          <p className={`text-4xl font-bold mt-2 ${balance >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-            {formatCurrency(balance)}
-          </p>
+      {/* =========================
+          TRANSACTION LIST
+      ========================== */}
+
+      <div className="transactions-section">
+
+        <div className="section-header">
+          <h2>Recent Transactions</h2>
         </div>
 
-        <div className="bg-gray-900 rounded-3xl p-8 border border-gray-800">
-          <p className="text-gray-400 text-sm">Total Income</p>
-          <p className="text-4xl font-bold mt-2 text-emerald-400">
-            {formatCurrency(totalIncome)}
-          </p>
-        </div>
-
-        <div className="bg-gray-900 rounded-3xl p-8 border border-gray-800">
-          <p className="text-gray-400 text-sm">Total Expenses</p>
-          <p className="text-4xl font-bold mt-2 text-red-400">
-            {formatCurrency(totalExpense)}
-          </p>
-        </div>
-      </div>
-
-      {/* Recent Transactions */}
-      <div className="bg-gray-900 rounded-3xl p-8">
-        <h2 className="text-xl font-semibold mb-6">Recent Transactions</h2>
-        
-        {loading ? (
-          <p>Loading...</p>
-        ) : transactions.length === 0 ? (
-          <p className="text-gray-400">No transactions yet. Add your first one!</p>
+        {transactions.length === 0 ? (
+          <p>No transactions found.</p>
         ) : (
-          <div className="space-y-4">
-            {transactions.slice(0, 5).map(tx => (
-              <div key={tx.id} className="flex justify-between items-center bg-gray-800 p-4 rounded-2xl">
-                <div>
-                  <p className="font-medium">{tx.description}</p>
-                  <p className="text-sm text-gray-500">{tx.category} • {tx.date}</p>
-                </div>
-                <p className={`font-semibold ${tx.type === 'income' ? 'text-emerald-400' : 'text-red-400'}`}>
-                  {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}
-                </p>
-              </div>
+          <div className="transactions-list">
+
+            {/* Render TransactionCard for each transaction */}
+            {transactions.map((transaction) => (
+              <TransactionCard
+                key={transaction.id}
+                transaction={transaction}
+              />
             ))}
+
           </div>
         )}
       </div>
     </div>
   );
-};
-
-export default Home;
+}
