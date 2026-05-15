@@ -1,12 +1,3 @@
 {
-  "transactions": [
-    {
-      "type": "expense",
-      "amount": 2500,
-      "category": "Food",
-      "description": "Food",
-      "date": "2026-05-15",
-      "id": 4
-    }
-  ]
+  "transactions": []
 }
