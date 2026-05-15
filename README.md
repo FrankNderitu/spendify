@@ -1,70 +1,80 @@
 # 💰 Spendify - Personal Finance Tracker
 
-**A modern React web application for tracking personal income and expenses.**
+A clean, modern, and fully functional React web application for managing personal income and expenses.
 
-## ✨ Project Description
-Spendify is a clean and intuitive React-based web application designed to help users manage their personal finances effectively. Users can track income and expenses, categorize transactions, view financial summaries, and monitor their spending habits through a beautiful dark-themed interface.
+![Spendify Dashboard](https://spendify-silk.vercel.app/og-image.png)  
+*(Live Dashboard Preview)*
 
-## 🎯 Features
-- ✅ Add, Edit, and Delete transactions (Full CRUD)
-- ✅ Real-time dashboard with Total Balance, Income & Expenses
-- ✅ Transaction categorization
-- ✅ Modern responsive design (Mobile + Desktop friendly)
-- ✅ Dark theme with Tailwind CSS
-- ✅ Client-side routing with React Router
+## ✨ Features
+
+- ✅ Add Income & Expense transactions
+- ✅ Edit existing transactions
+- ✅ Delete transactions with confirmation
+- ✅ Real-time balance, total income & expenses
+- ✅ Filter (All / Income / Expense) + Search
+- ✅ Fully responsive (Mobile + Desktop)
+- ✅ Beautiful dark UI with Tailwind CSS
+
+## 👥 Team Members
+
+| Role                | Name                |
+|---------------------|---------------------|
+| Group Leader        | Frank Kinyua        |
+| UI/UX & Styling     | Shalone Gichana     |
+| Dashboard           | Ian Gabriel         |
+| Forms & CRUD        | Abdifatah Bashir    |
 
 ## 🛠️ Tech Stack
+
 - **Frontend**: React.js + Vite
 - **Styling**: Tailwind CSS
 - **Routing**: React Router DOM
-- **Backend**: json-server (REST API)
-- **State Management**: React Hooks
+- **API**: json-server (Mock REST API)
+- **Deployment**: Vercel
 
-## 👥 Team Members
-| Role                  | Name                |
-|-----------------------|---------------------|
-| Group Leader          | Frank Kinyua        |
-| UI/UX & Styling       | Shalone Gichana     |
-| Dashboard             | Ian Gabriel         |
-| Forms & CRUD          | Abdifatah Bashir    |
+## 🚀 Links
 
-## 🚀 Quick Start
+- **Live Demo**: [https://spendify-silk.vercel.app](https://spendify-silk.vercel.app)
+- **Figma Design**: [View Design](https://www.figma.com/design/2mYImO8GyQkK5UEkTmoSyL/Spendify---UI-Design?node-id=0-1&t=utaMWrL0tOGoOgQE-1)
+- **Trello Board**: [View Trello_Board.png](./Trello_Board.png)
+- **GitHub Repository**: [FrankNderitu/spendify](https://github.com/FrankNderitu/spendify)
 
-### Installation
+## 📸 Screenshots
 
-1. Clone the repository
-   ```bash
-   git clone https://github.com/FrankNderitu/spendify.git
-   cd spendify
+*(Add screenshots here after deployment)*
 
-Install dependencies
+## 🖥️ Local Setup
 
+```bash
+# Clone the repo
+git clone https://github.com/FrankNderitu/spendify.git
+cd spendify
+
+# Install dependencies
 npm install
 
-Start JSON Server (Backend)
-
+# Start backend (json-server)
 npx json-server --watch db.json --port 3000
 
-Start the React App
+Open a new terminal and run:
 
+# Start frontend
 npm run dev
 
- ## 📸 Links
-- **Figma Design**: [https://www.figma.com/design/2mYImO8GyQkK5UEkTmoSyL/Spendify---UI-Design?node-id=0-1&t=utaMWrL0tOGoOgQE-1](https://www.figma.com/design/2mYImO8GyQkK5UEkTmoSyL/Spendify---UI-Design?node-id=0-1&t=utaMWrL0tOGoOgQE-1)
-- **Live Demo**: [https://spendify-silk.vercel.app](https://spendify-silk.vercel.app)
-- **Trello Board**: [View Trello_Board.png](./Trello_Board.png)
- Project Structure 
-src/
-├── components/      # Navbar, TransactionCard, TransactionForm
-├── pages/           # Home, AddTransaction, EditTransaction
-├── services/        # api.js
-└── utils/           # helpers.js
+Open http://localhost:5173 to view the app.
 
-Submission Checklist
+ Project Structure
 
-Figma Design Link
-Trello Board Screenshot (Trello_Board.png)
-GitHub Repository URL
-Live Vercel Deployment Link
-db.json file
+spendify/
+├── src/
+│   ├── components/     # TransactionCard, TransactionForm, Navbar
+│   ├── pages/          # Home, AddTransaction, EditTransaction
+│   ├── services/       # api.js
+│   └── utils/          # helpers.js (formatCurrency)
+├── db.json
+├── public/
+└── Trello_Board.png
+
+Made with  by Team Spendify
+Submitted: May 15, 2026
 
