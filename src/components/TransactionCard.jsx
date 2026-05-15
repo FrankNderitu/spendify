@@ -1,47 +1,39 @@
-const TransactionCard = ({ transaction }) => {
+import { Link } from 'react-router-dom';
+import { formatCurrency } from '../utils/helpers';
+
+const TransactionCard = ({ transaction, onDelete }) => {
+  const isIncome = transaction.type === "income";
+
   return (
-    <div className="bg-gray-900 border border-gray-800 p-5 rounded-2xl flex flex-col md:flex-row md:justify-between md:items-center gap-4 hover:bg-gray-800 hover:shadow-2xl hover:scale-[1.02] transition-all duration-300">
-
-      {/* Left Section */}
-      <div className="space-y-1">
-
-        <p className="font-semibold text-white text-lg">
-          {transaction?.description || "Transaction"}
+    <div className="bg-gray-800 border border-gray-700 rounded-2xl p-5 flex items-center justify-between hover:border-gray-500 transition">
+      <div>
+        <h3 className="text-white font-semibold text-lg">
+          {transaction.description}
+        </h3>
+        <p className="text-gray-400 text-sm mt-1">
+          {transaction.category} • {transaction.date}
         </p>
-
-        <p className="text-sm text-gray-400">
-          {transaction?.category} • {transaction?.date}
-        </p>
-
       </div>
 
-      {/* Right Section */}
-      <div className="flex flex-col md:items-end gap-2">
-
-        <p
-          className={`font-bold text-xl tracking-wide ${
-            transaction?.type === "income"
-              ? "text-emerald-400"
-              : "text-red-400"
-          }`}
-        >
-          {transaction?.type === "income" ? "+" : "-"}$
-          {transaction?.amount || "0"}
+      <div className="flex items-center gap-6">
+        <p className={`font-bold text-xl ${isIncome ? "text-emerald-400" : "text-red-400"}`}>
+          {isIncome ? "+" : "-"}{formatCurrency(transaction.amount)}
         </p>
 
-        {/* Buttons */}
         <div className="flex gap-3">
-
-          <button className="px-4 py-2 rounded-xl bg-blue-500 hover:bg-blue-600 hover:scale-105 text-white text-sm transition-all duration-300 shadow-md">
+          <Link
+            to={`/edit/${transaction.id}`}
+            className="bg-blue-600 hover:bg-blue-700 px-5 py-2 rounded-xl text-sm font-medium transition"
+          >
             Edit
-          </button>
-
-          <button className="px-4 py-2 rounded-xl bg-red-500 hover:bg-red-600 hover:scale-105 text-white text-sm transition-all duration-300 shadow-md">
+          </Link>
+          <button
+            onClick={() => onDelete(transaction.id)}
+            className="bg-red-600 hover:bg-red-700 px-5 py-2 rounded-xl text-sm font-medium transition"
+          >
             Delete
           </button>
-
         </div>
-
       </div>
     </div>
   );

@@ -1,37 +1,39 @@
 {
   "transactions": [
     {
-      "id": "1",
+      "id": 1,
+      "description": "Salary",
+      "amount": 85000,
       "type": "income",
-      "amount": 45000,
-      "category": "Salary",
-      "description": "May Salary",
       "date": "2026-05-01"
     },
     {
-      "id": "2",
+      "id": 2,
+      "description": "Freelance Project",
+      "amount": 25000,
+      "type": "income",
+      "date": "2026-05-03"
+    },
+    {
+      "id": 3,
+      "description": "Rent",
+      "amount": 30000,
       "type": "expense",
-      "amount": 2500,
-      "category": "Food",
+      "date": "2026-05-05"
+    },
+    {
+      "id": 4,
       "description": "Groceries",
-      "date": "2026-05-10"
+      "amount": 4500,
+      "type": "expense",
+      "date": "2026-05-06"
     },
     {
-      "id": "3",
+      "id": 5,
+      "description": "Internet",
+      "amount": 3200,
       "type": "expense",
-      "amount": 1200,
-      "category": "Transport",
-      "description": "Uber to town",
-      "date": "2026-05-11"
-    },
-    {
-      "type": "expense",
-      "amount": "1000",
-      "category": "Food",
-      "description": "Food",
-      "date": "2026-05-14",
-      "id": "d_JWZ2-Mu8Y"
+      "date": "2026-05-07"
     }
-  ],
-  "$schema": "./node_modules/json-server/schema.json"
+  ]
 }
