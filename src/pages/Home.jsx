@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
-import { getTransactions, deleteTransaction } from '../services/api';
+import { Link } from 'react-router-dom';
 import TransactionCard from '../components/TransactionCard';
+import { getTransactions, deleteTransaction } from '../services/api';
 import { formatCurrency } from '../utils/helpers';
 
 const Home = () => {
   const [transactions, setTransactions] = useState([]);
   const [filter, setFilter] = useState('all');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [search, setSearch] = useState('');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchTransactions();
@@ -16,54 +18,50 @@ const Home = () => {
     try {
       const data = await getTransactions();
       setTransactions(data);
-    } catch (error) {
-      console.error("Failed to fetch transactions", error);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm("Delete this transaction?")) {
-      try {
-        await deleteTransaction(id);
-        fetchTransactions();
-      } catch (error) {
-        alert("Failed to delete transaction");
-      }
+    if (!window.confirm('Delete this transaction?')) return;
+    try {
+      await deleteTransaction(id);
+      setTransactions(prev => prev.filter(t => t.id !== id));
+    } catch (err) {
+      alert('Failed to delete transaction');
     }
   };
 
-  // Calculate totals
-  const totalIncome = transactions
-    .filter(t => t.type === 'income')
-    .reduce((sum, t) => sum + Number(t.amount), 0);
-
-  const totalExpenses = transactions
-    .filter(t => t.type === 'expense')
-    .reduce((sum, t) => sum + Number(t.amount), 0);
-
-  const balance = totalIncome - totalExpenses;
-
-  // Filter + Search
   const filteredTransactions = transactions
-    .filter(t => {
-      const matchesFilter = filter === 'all' || 
-        (filter === 'income' && t.type === 'income') || 
-        (filter === 'expense' && t.type === 'expense');
-      
-      const matchesSearch = t.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           (t.category && t.category.toLowerCase().includes(searchTerm.toLowerCase()));
-      
+    .filter(tx => {
+      const matchesFilter = filter === 'all' || tx.type === filter;
+      const matchesSearch = tx.description.toLowerCase().includes(search.toLowerCase()) ||
+                           tx.category.toLowerCase().includes(search.toLowerCase());
       return matchesFilter && matchesSearch;
     })
     .sort((a, b) => new Date(b.date) - new Date(a.date));
 
+  const totalIncome = transactions
+    .filter(t => t.type === 'income')
+    .reduce((sum, t) => sum + Number(t.amount), 0);
+
+  const totalExpense = transactions
+    .filter(t => t.type === 'expense')
+    .reduce((sum, t) => sum + Number(t.amount), 0);
+
+  const balance = totalIncome - totalExpense;
+
   return (
     <div className="space-y-8">
+      {/* Header */}
       <div className="flex justify-between items-center">
         <h1 className="text-4xl font-bold">Dashboard</h1>
-        <a href="/add" className="bg-emerald-600 hover:bg-emerald-500 px-6 py-3 rounded-xl font-medium transition-colors">
+        <Link to="/add" className="bg-emerald-600 hover:bg-emerald-500 px-6 py-3 rounded-xl font-medium transition">
           + New Transaction
-        </a>
+        </Link>
       </div>
 
       {/* Summary Cards */}
@@ -76,45 +74,49 @@ const Home = () => {
         </div>
         <div className="bg-gray-900 p-6 rounded-2xl">
           <p className="text-gray-400">Total Income</p>
-          <p className="text-4xl font-bold text-emerald-400 mt-3">{formatCurrency(totalIncome)}</p>
+          <p className="text-4xl font-bold mt-3 text-emerald-400">{formatCurrency(totalIncome)}</p>
         </div>
         <div className="bg-gray-900 p-6 rounded-2xl">
           <p className="text-gray-400">Total Expenses</p>
-          <p className="text-4xl font-bold text-red-400 mt-3">{formatCurrency(totalExpenses)}</p>
+          <p className="text-4xl font-bold mt-3 text-red-400">{formatCurrency(totalExpense)}</p>
         </div>
       </div>
 
-      {/* Search + Filters */}
+      {/* Filters & Search */}
       <div className="flex flex-col md:flex-row gap-4">
         <input
           type="text"
           placeholder="Search transactions..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="flex-1 bg-gray-900 border border-gray-700 rounded-xl px-5 py-3 focus:outline-none focus:border-emerald-500"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="bg-gray-900 border border-gray-700 rounded-2xl px-4 py-3 flex-1"
         />
-        
-        <div className="flex gap-3">
-          <button onClick={() => setFilter('all')} className={`px-6 py-3 rounded-xl ${filter === 'all' ? 'bg-white text-black' : 'bg-gray-800'}`}>All</button>
-          <button onClick={() => setFilter('income')} className={`px-6 py-3 rounded-xl ${filter === 'income' ? 'bg-emerald-600' : 'bg-gray-800'}`}>Income</button>
-          <button onClick={() => setFilter('expense')} className={`px-6 py-3 rounded-xl ${filter === 'expense' ? 'bg-red-600' : 'bg-gray-800'}`}>Expense</button>
+        <div className="flex gap-2">
+          {['all', 'income', 'expense'].map(f => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`px-6 py-3 rounded-2xl capitalize font-medium transition ${
+                filter === f ? 'bg-emerald-600 text-white' : 'bg-gray-800 hover:bg-gray-700'
+              }`}
+            >
+              {f}
+            </button>
+          ))}
         </div>
       </div>
 
       {/* Transactions List */}
       <div className="bg-gray-900 p-6 rounded-2xl">
-        <h2 className="text-xl font-semibold mb-6">Recent Transactions ({filteredTransactions.length})</h2>
-        
-        {filteredTransactions.length === 0 ? (
-          <p className="text-gray-400 text-center py-16">No matching transactions found.</p>
+        <h2 className="text-xl font-semibold mb-4">Recent Transactions ({filteredTransactions.length})</h2>
+        {loading ? (
+          <p>Loading...</p>
+        ) : filteredTransactions.length === 0 ? (
+          <p className="text-gray-400 text-center py-8">No transactions found</p>
         ) : (
           <div className="space-y-4">
-            {filteredTransactions.map(transaction => (
-              <TransactionCard 
-                key={transaction.id} 
-                transaction={transaction} 
-                onDelete={handleDelete} 
-              />
+            {filteredTransactions.map(tx => (
+              <TransactionCard key={tx.id} transaction={tx} onDelete={handleDelete} />
             ))}
           </div>
         )}
