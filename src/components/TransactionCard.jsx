@@ -37,4 +37,6 @@ const TransactionCard = ({ transaction, onDelete }) => {
       </div>
     </div>
   );
-}
+};
+
+export default TransactionCard;

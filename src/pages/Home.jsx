@@ -97,22 +97,17 @@ const Home = () => {
 
       {/* Transactions */}
       <div className="space-y-4">
-
-        {filteredTransactions.length === 0 ? (
-          <div className="bg-gray-800 rounded-2xl p-6 text-gray-400">
-            No transactions found.
-          </div>
-        ) : (
-          filteredTransactions.map((transaction) => (
-            <TransactionCard
-              key={transaction.id}
-              transaction={transaction}
-              onDelete={handleDelete}
-            />
-          ))
-        )}
-
+        {filteredTransactions.map(tx => (
+          <TransactionCard
+            key={tx.id}
+            transaction={tx}
+            onDelete={handleDelete}
+          />
+        ))}
       </div>
     </div>
   );
-}
+};
+
+export default Home;
+

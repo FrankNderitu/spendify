@@ -3,5 +3,14 @@ export const formatCurrency = (amount) => {
     style: 'currency',
     currency: 'KES',
     minimumFractionDigits: 0,
-  }).format(number);
-}
+  }).format(amount || 0);
+};
+
+export const formatDate = (dateString) => {
+  if (!dateString) return '';
+  return new Date(dateString).toLocaleDateString('en-KE', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
+};
