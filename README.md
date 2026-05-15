@@ -13,6 +13,7 @@ A clean, modern, and fully functional React web application for tracking persona
 - ✅ Filter (All / Income / Expense) + Search functionality
 - ✅ Fully responsive design (Mobile + Desktop)
 - ✅ Beautiful dark theme with Tailwind CSS
+- ✅ KSh currency formatting
 
 ## 👥 Team Members
 
