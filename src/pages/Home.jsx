@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { formatCurrency } from '../utils/helpers';   // we'll create this next
+import TransactionCard from '../components/TransactionCard';
 
 const Home = () => {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState('all');
 
-  // Fetch transactions
   useEffect(() => {
     fetch('http://localhost:3001/transactions')
       .then(res => res.json())
@@ -15,12 +15,17 @@ const Home = () => {
         setLoading(false);
       })
       .catch(err => {
-        console.error("Error fetching data:", err);
+        console.error(err);
         setLoading(false);
       });
   }, []);
 
-  // Calculate totals
+  const filteredTransactions = transactions.filter(tx => {
+    if (filter === 'income') return tx.type === 'income';
+    if (filter === 'expense') return tx.type === 'expense';
+    return true;
+  });
+
   const totalIncome = transactions
     .filter(t => t.type === 'income')
     .reduce((sum, t) => sum + Number(t.amount), 0);
@@ -31,68 +36,78 @@ const Home = () => {
 
   const balance = totalIncome - totalExpense;
 
+  const handleDelete = async (id) => {
+    if (!window.confirm('Delete this transaction?')) return;
+    try {
+      await fetch(`http://localhost:3001/transactions/${id}`, { method: 'DELETE' });
+      setTransactions(prev => prev.filter(t => t.id !== id));
+    } catch (err) {
+      alert('Failed to delete');
+    }
+  };
+
   return (
-    <div>
-      <div className="flex justify-between items-center mb-8">
+    <div className="space-y-8">
+      <div className="flex justify-between items-center">
         <h1 className="text-4xl font-bold">Dashboard</h1>
         <Link
           to="/add"
-          className="bg-emerald-500 hover:bg-emerald-600 px-6 py-3 rounded-2xl font-semibold flex items-center gap-2 transition"
+          className="bg-emerald-500 hover:bg-emerald-600 px-6 py-3 rounded-2xl font-semibold flex items-center gap-2"
         >
           + New Transaction
         </Link>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-gray-900 rounded-3xl p-8 border border-gray-800">
-          <p className="text-gray-400 text-sm">Total Balance</p>
+          <p className="text-gray-400">Total Balance</p>
           <p className={`text-4xl font-bold mt-2 ${balance >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-            {formatCurrency(balance)}
+            {balance.toLocaleString()}
           </p>
         </div>
-
         <div className="bg-gray-900 rounded-3xl p-8 border border-gray-800">
-          <p className="text-gray-400 text-sm">Total Income</p>
+          <p className="text-gray-400">Total Income</p>
           <p className="text-4xl font-bold mt-2 text-emerald-400">
-            {formatCurrency(totalIncome)}
+            {totalIncome.toLocaleString()}
           </p>
         </div>
-
         <div className="bg-gray-900 rounded-3xl p-8 border border-gray-800">
-          <p className="text-gray-400 text-sm">Total Expenses</p>
+          <p className="text-gray-400">Total Expenses</p>
           <p className="text-4xl font-bold mt-2 text-red-400">
-            {formatCurrency(totalExpense)}
+            {totalExpense.toLocaleString()}
           </p>
         </div>
       </div>
 
-      {/* Recent Transactions */}
-      <div className="bg-gray-900 rounded-3xl p-8">
-        <h2 className="text-xl font-semibold mb-6">Recent Transactions</h2>
-        
-        {loading ? (
-          <p>Loading...</p>
-        ) : transactions.length === 0 ? (
-          <p className="text-gray-400">No transactions yet. Add your first one!</p>
-        ) : (
-          <div className="space-y-4">
-            {transactions.slice(0, 5).map(tx => (
-              <div key={tx.id} className="flex justify-between items-center bg-gray-800 p-4 rounded-2xl">
-                <div>
-                  <p className="font-medium">{tx.description}</p>
-                  <p className="text-sm text-gray-500">{tx.category} • {tx.date}</p>
-                </div>
-                <p className={`font-semibold ${tx.type === 'income' ? 'text-emerald-400' : 'text-red-400'}`}>
-                  {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}
-                </p>
-              </div>
-            ))}
-          </div>
-        )}
+      {/* Filters */}
+      <div className="flex gap-4">
+        {['all', 'income', 'expense'].map(f => (
+          <button
+            key={f}
+            onClick={() => setFilter(f)}
+            className={`px-6 py-3 rounded-2xl capitalize ${
+              filter === f ? 'bg-emerald-500 text-white' : 'bg-gray-800 text-gray-400'
+            }`}
+          >
+            {f}
+          </button>
+        ))}
+      </div>
+
+      {/* Transactions */}
+      <div className="space-y-4">
+        {filteredTransactions.map(tx => (
+          <TransactionCard
+            key={tx.id}
+            transaction={tx}
+            onDelete={handleDelete}
+          />
+        ))}
       </div>
     </div>
   );
 };
 
 export default Home;
+
