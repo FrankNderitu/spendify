@@ -1,109 +1,141 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import TransactionCard from '../components/TransactionCard';
+import { getTransactions, deleteTransaction } from '../services/api';
+import { formatCurrency } from '../utils/helpers';
 
 const Home = () => {
   const [transactions, setTransactions] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
+  const [search, setSearch] = useState('');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('http://localhost:3001/transactions')
-      .then(res => res.json())
-      .then(data => {
-        setTransactions(data);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error("Error fetching data:", err);
-        setLoading(false);
-      });
+    fetchTransactions();
   }, []);
 
-  const filteredTransactions = transactions.filter(tx => {
-    if (filter === 'income') return tx.type === 'income';
-    if (filter === 'expense') return tx.type === 'expense';
-    return true;
-  });
+  const fetchTransactions = async () => {
+    try {
+      const data = await getTransactions();
+      setTransactions(data);
+    } catch (err) {
+      console.error("Failed to fetch transactions:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this transaction?')) return;
+    
+    try {
+      await deleteTransaction(id);
+      setTransactions(prev => prev.filter(t => t.id !== id));
+    } catch (err) {
+      alert('Failed to delete transaction');
+    }
+  };
+
+  // Filter and Search
+  const filteredTransactions = transactions
+    .filter(tx => {
+      const matchesFilter = filter === 'all' || tx.type === filter;
+      const matchesSearch = 
+        tx.description?.toLowerCase().includes(search.toLowerCase()) ||
+        tx.category?.toLowerCase().includes(search.toLowerCase());
+      return matchesFilter && matchesSearch;
+    })
+    .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  // Calculations
   const totalIncome = transactions
     .filter(t => t.type === 'income')
-    .reduce((sum, t) => sum + Number(t.amount), 0);
+    .reduce((sum, t) => sum + Number(t.amount || 0), 0);
 
   const totalExpense = transactions
     .filter(t => t.type === 'expense')
-    .reduce((sum, t) => sum + Number(t.amount), 0);
+    .reduce((sum, t) => sum + Number(t.amount || 0), 0);
 
   const balance = totalIncome - totalExpense;
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-8">
+    <div className="space-y-8">
+      <div className="flex justify-between items-center">
         <h1 className="text-4xl font-bold">Dashboard</h1>
-        <Link
-          to="/add"
-          className="bg-emerald-500 hover:bg-emerald-600 px-6 py-3 rounded-2xl font-semibold flex items-center gap-2 transition"
+        <Link 
+          to="/add" 
+          className="bg-emerald-600 hover:bg-emerald-500 px-6 py-3 rounded-xl font-medium transition-colors"
         >
           + New Transaction
         </Link>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-        <div className="bg-gray-900 rounded-3xl p-8 border border-gray-800">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-gray-900 p-6 rounded-2xl">
           <p className="text-gray-400 text-sm">Total Balance</p>
-          <p className={`text-4xl font-bold mt-2 ${balance >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-            ${balance.toLocaleString()}
+          <p className={`text-4xl font-bold mt-3 ${balance >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+            {formatCurrency(balance)}
           </p>
         </div>
-        <div className="bg-gray-900 rounded-3xl p-8 border border-gray-800">
+        <div className="bg-gray-900 p-6 rounded-2xl">
           <p className="text-gray-400 text-sm">Total Income</p>
-          <p className="text-4xl font-bold mt-2 text-emerald-400">
-            ${totalIncome.toLocaleString()}
+          <p className="text-4xl font-bold mt-3 text-emerald-400">
+            {formatCurrency(totalIncome)}
           </p>
         </div>
-        <div className="bg-gray-900 rounded-3xl p-8 border border-gray-800">
+        <div className="bg-gray-900 p-6 rounded-2xl">
           <p className="text-gray-400 text-sm">Total Expenses</p>
-          <p className="text-4xl font-bold mt-2 text-red-400">
-            ${totalExpense.toLocaleString()}
+          <p className="text-4xl font-bold mt-3 text-red-400">
+            {formatCurrency(totalExpense)}
           </p>
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="flex gap-3 mb-6">
-        {['all', 'income', 'expense'].map(f => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className={`px-6 py-2.5 rounded-2xl capitalize font-medium transition ${
-              filter === f ? 'bg-emerald-500 text-white' : 'bg-gray-800 hover:bg-gray-700 text-gray-400'
-            }`}
-          >
-            {f}
-          </button>
-        ))}
+      {/* Search and Filters */}
+      <div className="flex flex-col md:flex-row gap-4">
+        <input
+          type="text"
+          placeholder="Search transactions..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="bg-gray-900 border border-gray-700 rounded-2xl px-4 py-3 flex-1 focus:outline-none focus:border-emerald-500"
+        />
+        <div className="flex gap-2">
+          {['all', 'income', 'expense'].map(f => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`px-6 py-3 rounded-2xl capitalize font-medium transition-all ${
+                filter === f 
+                  ? 'bg-emerald-600 text-white' 
+                  : 'bg-gray-800 hover:bg-gray-700 text-gray-400'
+              }`}
+            >
+              {f === 'all' ? 'All' : f}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Transactions List */}
-      <div className="bg-gray-900 rounded-3xl p-8">
-        <h2 className="text-xl font-semibold mb-6">Recent Transactions</h2>
-        
+      <div className="bg-gray-900 p-6 rounded-2xl">
+        <h2 className="text-xl font-semibold mb-4">
+          Recent Transactions ({filteredTransactions.length})
+        </h2>
+
         {loading ? (
-          <p>Loading...</p>
+          <p className="text-center py-8 text-gray-400">Loading transactions...</p>
         ) : filteredTransactions.length === 0 ? (
-          <p className="text-gray-400">No transactions yet.</p>
+          <p className="text-center py-8 text-gray-400">No transactions found</p>
         ) : (
           <div className="space-y-4">
-            {filteredTransactions.slice(0, 8).map(tx => (
-              <div key={tx.id} className="flex justify-between items-center bg-gray-800 p-5 rounded-2xl">
-                <div>
-                  <p className="font-medium">{tx.description}</p>
-                  <p className="text-sm text-gray-500">{tx.category} • {tx.date}</p>
-                </div>
-                <p className={`font-semibold text-lg ${tx.type === 'income' ? 'text-emerald-400' : 'text-red-400'}`}>
-                  {tx.type === 'income' ? '+' : '-'}${Number(tx.amount).toLocaleString()}
-                </p>
-              </div>
+            {filteredTransactions.map(tx => (
+              <TransactionCard 
+                key={tx.id} 
+                transaction={tx} 
+                onDelete={handleDelete} 
+              />
             ))}
           </div>
         )}

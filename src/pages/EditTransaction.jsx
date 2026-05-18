@@ -1,90 +1,60 @@
-import { useNavigate, useParams } from 'react-router-dom';
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import TransactionForm from "../components/TransactionForm";
+import { getTransactions, updateTransaction } from "../services/api";
 
 const EditTransaction = () => {
-  const navigate = useNavigate();
   const { id } = useParams();
+  const navigate = useNavigate();
+  const [transaction, setTransaction] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchTransaction = async () => {
+      try {
+        const allTransactions = await getTransactions();
+        const found = allTransactions.find(t => String(t.id) === String(id));
+        if (found) setTransaction(found);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchTransaction();
+  }, [id]);
+
+  const handleSubmit = async (updatedData) => {
+    try {
+      await updateTransaction(id, updatedData);
+      alert("Transaction updated successfully!");
+      navigate("/");
+    } catch (error) {
+      console.error(error);
+      alert("Failed to update transaction. Make sure json-server is running.");
+    }
+  };
+
+  if (loading) return <div className="text-center py-10">Loading...</div>;
+  if (!transaction) return <div className="text-center py-10">Transaction not found</div>;
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8">
-
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-8">
-
-        <h1 className="text-3xl font-bold text-white">
-          Edit Transaction #{id}
-        </h1>
-
-        <button
-          onClick={() => navigate('/home')}
-          className="text-gray-400 hover:text-emerald-400 transition-all duration-300"
+    <div className="max-w-lg mx-auto pt-8">
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold">Edit Transaction</h1>
+        <button 
+          onClick={() => navigate("/")}
+          className="text-gray-400 hover:text-white"
         >
           ← Back to Dashboard
         </button>
-
       </div>
 
-      {/* Form Container */}
-      <div className="bg-gray-900 border border-gray-800 p-8 rounded-3xl shadow-xl">
-
-        <div className="space-y-6">
-
-          {/* Placeholder Inputs */}
-          <div>
-            <label className="block text-sm text-gray-400 mb-2">
-              Amount
-            </label>
-
-            <div className="bg-gray-950 border border-gray-800 rounded-xl p-4 text-gray-500">
-              Existing amount value
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm text-gray-400 mb-2">
-              Category
-            </label>
-
-            <div className="bg-gray-950 border border-gray-800 rounded-xl p-4 text-gray-500">
-              Existing category value
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm text-gray-400 mb-2">
-              Description
-            </label>
-
-            <div className="bg-gray-950 border border-gray-800 rounded-xl p-4 text-gray-500">
-              Existing description value
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm text-gray-400 mb-2">
-              Date
-            </label>
-
-            <div className="bg-gray-950 border border-gray-800 rounded-xl p-4 text-gray-500">
-              Existing date value
-            </div>
-          </div>
-
-        </div>
-
-        {/* Info Message */}
-        <div className="mt-10 text-center">
-
-          <p className="text-gray-400 text-lg">
-            Edit form functionality will be implemented by Member 4.
-          </p>
-
-          <p className="text-sm text-gray-500 mt-2">
-            UI structure and styling prepared for integration.
-          </p>
-
-        </div>
-
-      </div>
+      <TransactionForm 
+        onSubmit={handleSubmit} 
+        initialData={transaction}
+        loading={false}
+      />
     </div>
   );
 };
